@@ -162,8 +162,8 @@
       <feGaussianBlur in="bDisp" stdDeviation="0.5" result="bSoft"/>
 
       <!-- Recombine -->
-      <feBlend in="rSoft" in2="gSoft" mode="multiply" result="rg"/>
-      <feBlend in="rg" in2="bSoft" mode="multiply" result="final"/>
+      <feBlend in="rSoft" in2="gSoft" mode="screen" result="rg"/>
+      <feBlend in="rg" in2="bSoft" mode="screen" result="final"/>
 
     </filter>
 
