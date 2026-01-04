@@ -132,7 +132,7 @@
       <!-- Misregistration -->
       <feOffset in="r" dx="-1.2" dy="0.6" result="rOff"/>
       <feOffset in="g" dx="0.8" dy="-0.4" result="gOff"/>
-      <feOffset in="b" dx="0.3" dy="1.1" result="bOff"/>
+      <feOffset in="b" dx="10" dy="20" result="bOff"/>
 
       <!-- Noise -->
       <feTurbulence type="fractalNoise"
@@ -155,7 +155,7 @@
         result="gDisp"/>
 
       <feDisplacementMap in="bOff" in2="noise"
-        scale="1.4"
+        scale="5"
         xChannelSelector="G"
         yChannelSelector="B"
         result="bDisp"/>
@@ -167,7 +167,7 @@
 
       <!-- Recombine -->
       <feBlend in="rSoft" in2="gSoft" mode="screen" result="rg"/>
-      <feBlend in="rg" in2="bSoft" mode="screen" result="final"/>
+      <feBlend in="rg" in2="bSoft" mode="multiply" result="final"/>
 
     </filter>
 
