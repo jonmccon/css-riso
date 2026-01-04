@@ -14,7 +14,7 @@
     padding: 4rem 2rem;
     background: #f7f5f1;
     font-family: Georgia, "Times New Roman", serif;
-    color: #fe5000;
+    color: #111;
   }
 
   section {
@@ -119,11 +119,15 @@
 
       <feColorMatrix in="SourceGraphic" type="matrix"
         values="
-          0 0 0 0 0
-          0 0 0 0 0
-          0 0 1 0 0
-          0 0 0 1 0"
+          0.500  0.000  0.500  0.000  0.000 
+          0.000  0.500  0.000  0.000  0.000 
+          0.000  0.000  1.000  0.000  0.000 
+          0.000  0.000  0.000  0.800  0.00"
         result="b"/>
+
+     
+    
+    
 
       <!-- Misregistration -->
       <feOffset in="r" dx="-1.2" dy="0.6" result="rOff"/>
