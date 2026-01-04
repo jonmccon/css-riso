@@ -1,0 +1,162 @@
+# Workflow for deploying preview builds of copilot branches to GitHub Pages subdirectories
+name: Deploy preview for copilot branches
+
+on: 
+  # Runs on pushes to any branch matching the copilot pattern
+  push: 
+    branches: 
+      - "copilot-*"
+      - "copilot/*"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions: 
+  contents: read
+  pages:  write
+  id-token: write
+  actions: write
+  pull-requests: write
+
+# Allow multiple concurrent preview deployments
+concurrency:
+  group: "preview-${{ github.ref_name }}"
+  cancel-in-progress: true
+
+jobs: 
+  # Preview deploy job for copilot branches
+  preview-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages-preview
+      url: ${{ steps.deployment.outputs.page_url }}${{ steps.prepare. outputs.branch_path }}
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with: 
+          path: 'current-branch'
+        
+      - name:  Checkout main branch for existing site
+        uses: actions/checkout@v4
+        with:
+          ref: 'main'
+          path: 'main-branch'
+
+      - name:  Prepare branch directory structure
+        id: prepare
+        run: |
+          # Sanitize branch name for URL (replace / with -)
+          BRANCH_NAME="${{ github.ref_name }}"
+          SAFE_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
+          echo "safe_branch_name=$SAFE_BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "branch_path=$SAFE_BRANCH_NAME/" >> $GITHUB_OUTPUT
+          
+          # Create the deployment directory structure
+          mkdir -p deploy-site
+          
+          # Copy main branch content to root
+          cp -r main-branch/* deploy-site/
+          
+          # Create subdirectory for this branch
+          mkdir -p "deploy-site/$SAFE_BRANCH_NAME"
+          cp -r current-branch/* "deploy-site/$SAFE_BRANCH_NAME/"
+          
+          echo "Created deployment structure with main at root and $BRANCH_NAME at /$SAFE_BRANCH_NAME/"
+        
+      - name: Create preview modifications
+        run: |
+          # Add a banner to the preview branch index. html to indicate this is a preview
+          BRANCH_NAME="${{ github.ref_name }}"
+          SAFE_BRANCH_NAME="${{ steps.prepare.outputs.safe_branch_name }}"
+          COMMIT_SHA="${{ github.sha }}"
+          
+          # Modify the preview branch's index.html
+          PREVIEW_HTML="deploy-site/$SAFE_BRANCH_NAME/index.html"
+          
+          # Update title
+          sed -i "s|<title>.*</title>|<title>🔍 [PREVIEW] CSS Riso - ${BRANCH_NAME}</title>|" "$PREVIEW_HTML"
+          
+          # Add preview banner to the HTML
+          sed -i "/<body[^>]*>/a\\
+          <div style=\"background: #fbbf24; color: #92400e; padding: 8px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 1000;\">\\
+            🔍 PREVIEW BUILD - Branch: ${BRANCH_NAME} | Commit: ${COMMIT_SHA: 0:7}\\
+          </div>" "$PREVIEW_HTML"
+          
+          # Create a preview info file
+          echo "Preview build for branch: $BRANCH_NAME" > "deploy-site/$SAFE_BRANCH_NAME/preview-info. txt"
+          echo "Commit: $COMMIT_SHA" >> "deploy-site/$SAFE_BRANCH_NAME/preview-info.txt"
+          echo "Built at: $(date)" >> "deploy-site/$SAFE_BRANCH_NAME/preview-info.txt"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        
+      - name: Upload artifact to Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'deploy-site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Create deployment summary
+        run: |
+          SAFE_BRANCH_NAME="${{ steps.prepare.outputs.safe_branch_name }}"
+          PREVIEW_URL="${{ steps.deployment.outputs.page_url }}$SAFE_BRANCH_NAME/"
+          
+          echo "## 🔍 Preview Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Subdirectory:** \`$SAFE_BRANCH_NAME/\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 Direct Access" >> $GITHUB_STEP_SUMMARY
+          echo "**Preview URL:** 🔗 **[$PREVIEW_URL]($PREVIEW_URL)**" >> $GITHUB_STEP_SUMMARY
+          echo "**Main site:** 🔗 **[${{ steps.deployment.outputs.page_url }}](${{ steps.deployment.outputs.page_url }})**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✨ Features" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎨 CSS Riso ink print effects" >> $GITHUB_STEP_SUMMARY
+          echo "- 📝 Misregistration & color separation" >> $GITHUB_STEP_SUMMARY
+          echo "- 🖨️ SVG filter demonstrations" >> $GITHUB_STEP_SUMMARY
+          echo "- ✨ Micro jitter & paper grain" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔍 Preview banner for easy identification" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 **Branch-specific URL at /$SAFE_BRANCH_NAME/**" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR if applicable
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/copilot')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Find PR for this branch
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}: ${context.ref.replace('refs/heads/', '')}`,
+              state: 'open'
+            });
+            
+            if (prs.length > 0) {
+              const pr = prs[0];
+              const safeBranchName = "${{ steps.prepare.outputs.safe_branch_name }}";
+              const previewUrl = "${{ steps.deployment.outputs.page_url }}" + safeBranchName + "/";
+              const mainUrl = "${{ steps.deployment.outputs.page_url }}";
+              
+              const comment = `🔍 **Preview deployment ready! **
+              
+              **Branch:** \`${{ github.ref_name }}\`
+              **Subdirectory:** \`${safeBranchName}/\`
+              
+              ### 🌐 Direct Access: 
+              **🔗 Preview:** **[${previewUrl}](${previewUrl})**
+              **🔗 Main site:** [${mainUrl}](${mainUrl})
+              
+              Your preview is now live at its own branch-specific URL!  The main site remains unchanged at the root, while your preview is accessible at the subdirectory path. `;
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: comment
+              });
+            }
