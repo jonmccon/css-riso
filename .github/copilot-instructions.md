@@ -13,7 +13,7 @@ css-riso/
 ├── index.html           # Main demo page with SVG filter implementation
 ├── img/                 # Image assets
 ├── .github/
-│   └── Workflows/       # GitHub Actions workflows
+│   └── workflows/       # GitHub Actions workflows
 │       ├── static.yml   # Deploys main branch to GitHub Pages
 │       └── preview-deploy.yml  # Deploys copilot branches as previews
 └── README.md           # Project documentation
