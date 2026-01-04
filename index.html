@@ -92,7 +92,7 @@
   .demo-square {
     width: 200px;
     height: 200px;
-    background: #ff6b35;
+    background: #333333;
     margin: 0;
   }
 </style>
@@ -179,6 +179,13 @@
       <!-- Recombine -->
       <feBlend in="rSoft" in2="gSoft" mode="screen" result="rg"/>
       <feBlend in="rg" in2="bSoft" mode="multiply" result="final"/>
+
+      <feColorMatrix type="matrix"
+  values="
+    1.15 -0.05 -0.05 0 0
+   -0.05  1.15 -0.05 0 0
+   -0.05 -0.05  1.15 0 0
+    0     0     0     1 0"/>
 
     </filter>
 
