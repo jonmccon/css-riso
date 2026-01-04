@@ -112,58 +112,58 @@
       color-interpolation-filters="sRGB">
 
       <!-- Create individual colored offset layers -->
-      <!-- Red channel with color -->
+      <!-- Red channel with color - increased opacity -->
       <feColorMatrix in="SourceGraphic" type="matrix"
         values="
-          1.0  0    0    0  0
+          1.2  0    0    0  0
           0    0    0    0  0
           0    0    0    0  0
-          0    0    0    0.8  0"
+          0    0    0    1.0  0"
         result="red"/>
 
-      <!-- Green channel with color -->
+      <!-- Green channel with color - increased opacity -->
       <feColorMatrix in="SourceGraphic" type="matrix"
         values="
           0    0    0    0  0
-          0    1.0  0    0  0
+          0    1.2  0    0  0
           0    0    0    0  0
-          0    0    0    0.8  0"
+          0    0    0    1.0  0"
         result="green"/>
 
-      <!-- Blue channel with color -->
+      <!-- Blue channel with color - increased opacity -->
       <feColorMatrix in="SourceGraphic" type="matrix"
         values="
           0    0    0    0  0
           0    0    0    0  0
-          0    0    1.0  0  0
-          0    0    0    0.8  0"
+          0    0    1.2  0  0
+          0    0    0    1.0  0"
         result="blue"/>
 
-      <!-- Yellow (R+G) -->
+      <!-- Yellow (R+G) - increased opacity -->
       <feColorMatrix in="SourceGraphic" type="matrix"
         values="
-          1.0  0    0    0  0
-          0    1.0  0    0  0
+          1.2  0    0    0  0
+          0    1.2  0    0  0
           0    0    0    0  0
-          0    0    0    0.6  0"
+          0    0    0    0.8  0"
         result="yellow"/>
 
-      <!-- Cyan (G+B) -->
+      <!-- Cyan (G+B) - increased opacity -->
       <feColorMatrix in="SourceGraphic" type="matrix"
         values="
           0    0    0    0  0
-          0    1.0  0    0  0
-          0    0    1.0  0  0
-          0    0    0    0.6  0"
+          0    1.2  0    0  0
+          0    0    1.2  0  0
+          0    0    0    0.8  0"
         result="cyan"/>
 
-      <!-- Magenta (R+B) -->
+      <!-- Magenta (R+B) - increased opacity -->
       <feColorMatrix in="SourceGraphic" type="matrix"
         values="
-          1.0  0    0    0  0
+          1.2  0    0    0  0
           0    0    0    0  0
-          0    0    1.0  0  0
-          0    0    0    0.6  0"
+          0    0    1.2  0  0
+          0    0    0    0.8  0"
         result="magenta"/>
 
      
@@ -235,8 +235,8 @@
       <feBlend in="rgby" in2="cyanBlur" mode="screen" result="rgbyc"/>
       <feBlend in="rgbyc" in2="magentaBlur" mode="screen" result="colors"/>
       
-      <!-- Blend colored halos with original using multiply to preserve text -->
-      <feBlend in="SourceGraphic" in2="colors" mode="multiply" result="final"/>
+      <!-- Put source (text) over the colored background -->
+      <feComposite in="SourceGraphic" in2="colors" operator="over" result="final"/>
 
       <!-- Optional: boost saturation slightly -->
       <feColorMatrix type="saturate" values="1.2"/>
